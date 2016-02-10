@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="AeroBike-Minecraft:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/AeroBike_Minecraft_jar</output-path>
+    <root id="archive" name="AeroBike-Minecraft.jar">
+      <element id="module-output" name="Aerocraft" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jinput-2.0.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jutils-1.0.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jinput-platform-2.0.6-natives-linux.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jinput-platform-2.0.6-natives-windows.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jinput-platform-2.0.6-natives-osx.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/nrjavaserial-3.11.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/commons-net-3.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/commons-lang3-3.2.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

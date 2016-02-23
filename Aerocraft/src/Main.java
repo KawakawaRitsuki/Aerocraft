@@ -1,8 +1,6 @@
 import gnu.io.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.Enumeration;
 
@@ -44,7 +42,7 @@ public class Main  implements SerialPortEventListener {
         }
         // the next line is for Raspberry Pi and
         // gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
-        System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/cu.usbmodem1411");
+        System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/cu.usbmodem1421");
 
         CommPortIdentifier portId = null;
         Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
@@ -115,6 +113,7 @@ public class Main  implements SerialPortEventListener {
                 if(before == 0){
                     before = System.currentTimeMillis();
                     BPM = 60;
+                    System.out.println("start");
                 } else {
                     long now = System.currentTimeMillis();
                     nowTime[count] = (int)(now - before);
@@ -152,24 +151,24 @@ public class Main  implements SerialPortEventListener {
                 while(true){
                     if(main.BPM >= 90) {
                         main.isDash = true;
-                        main.robot.keyPress(java.awt.event.KeyEvent.VK_L);
-                        main.robot.keyPress(java.awt.event.KeyEvent.VK_W);
+                        main.robot.keyPress(KeyEvent.VK_W);
+                        main.robot.keyPress(KeyEvent.VK_L);
+                        main.robot.delay(100);
+                        main.robot.keyRelease(KeyEvent.VK_L);
+
                     } else if (main.BPM >= 40) {
                         if(main.isDash){
-                            main.robot.keyRelease(java.awt.event.KeyEvent.VK_L);
-                            main.robot.keyPress(java.awt.event.KeyEvent.VK_K);
+                            main.robot.keyRelease(KeyEvent.VK_W);
                             main.robot.delay(100);
-                            main.robot.keyRelease(java.awt.event.KeyEvent.VK_K);
-                            main.isDash = false;
                         }
-                        main.robot.keyPress(java.awt.event.KeyEvent.VK_W);
+                        main.isDash = false;
+                        main.robot.keyPress(KeyEvent.VK_W);
                     } else {
-                        if(main.isDash){
-                            main.isDash = false;
-                            main.robot.keyRelease(java.awt.event.KeyEvent.VK_L);
-                        }
-                        main.robot.keyRelease(java.awt.event.KeyEvent.VK_W);
+                        main.isDash = false;
+                        main.robot.keyRelease(KeyEvent.VK_W);
                     }
+
+                    main.robot.delay(100);
                 }
             }
         };
@@ -185,7 +184,14 @@ public class Main  implements SerialPortEventListener {
                         main.before = 0;
                         main.nowTime[0] = 0;
                         main.nowTime[1] = 0;
-                        System.out.println("TEST");
+
+                        main.robot.keyRelease(KeyEvent.VK_W);
+                        main.robot.delay(50);
+                        main.robot.keyPress(KeyEvent.VK_W);
+                        main.robot.delay(50);
+                        main.robot.keyRelease(KeyEvent.VK_W);
+
+                        System.out.println("Stop");
                     }
                     try {
                         Thread.sleep(100);

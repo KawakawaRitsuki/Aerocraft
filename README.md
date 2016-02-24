@@ -15,7 +15,7 @@ Windows Server 2012 R2（Windows8.1相当）で、動作が確認できません
 
 ##準備
 - Arduino Uno
-- 10kΩ抵抗
+- 15kΩ抵抗
 - 3.5mmミニジャック(モノラルでも可)
  - http://akizukidenshi.com/catalog/c/c35jack/
  - 自分は百均の分配器から取り出しました
@@ -39,13 +39,13 @@ AFB4413の場合は、右足ペダルが下に行った時でした。
 ###初回のみ
 ####Arduinoボードへの書き込み
 当ソフトウェアのArduinoフォルダへ移動し、その中にあるファイルを開きます。
-この際開けない場合は、http://arduino.cc/より開発ソフトウェアをダウンロードしてインストールしてください。
+この際開けない場合は、http://arduino.cc/ より開発ソフトウェアをダウンロードしてインストールしてください。
 
 次に、Arduinoを接続して書き込みます。
 上のほうにある右矢印ボタンで書き込めます。
 
 ####ソフトウェアのダウンロード
-リリースページhttps://github.com/KawakawaRitsuki/Aerocraft/releasesからjarファイルをダウンロードして下さい。
+リリースページhttps://github.com/KawakawaRitsuki/Aerocraft/releases からjarファイルをダウンロードして下さい。
 
 ####マインクラフトの設定
 キーコンフィグから、スニークをK、ダッシュをLに割り当てておいてください。

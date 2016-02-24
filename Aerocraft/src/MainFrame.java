@@ -45,24 +45,22 @@ public class MainFrame extends JFrame {
 
         combo.setPreferredSize(new Dimension(180, 40));
 
-        JLabel label = new JLabel("ポート設定");
+        JLabel label = new JLabel("PortSetting");
 
         JPanel p = new JPanel();
         p.setLayout(gbl);
 
-        JButton button = new JButton("開始");
+        JButton button = new JButton("Start");
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(isStart){
-                    isStart = false;
-                    button.setText("開始");
 
-                    main.stop();
+                    System.exit(0);
 
                 }else{
                     isStart = true;
-                    button.setText("停止");
+                    button.setText("Stop");
 
                     System.out.println((String)combo.getSelectedItem());
                     main.initialize((String)combo.getSelectedItem());

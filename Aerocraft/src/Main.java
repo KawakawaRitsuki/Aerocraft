@@ -14,7 +14,6 @@ public class Main  implements SerialPortEventListener {
     Thread keyPressThread;
     Thread stopCheckThread;
 
-    boolean thStopFlag;
     public int BPM;
     public long before;
     public int nowTime[];
@@ -23,7 +22,6 @@ public class Main  implements SerialPortEventListener {
     boolean isDash;
 
     public void variableInit(){
-        thStopFlag = true;
         BPM = 0;
         before = 0;
         nowTime = new int[2];
@@ -37,7 +35,6 @@ public class Main  implements SerialPortEventListener {
         variableInit();
 
         serialPort = null;
-        thStopFlag = true;
         try {
             robot = new Robot();
         } catch (AWTException ae) {
@@ -66,7 +63,7 @@ public class Main  implements SerialPortEventListener {
 
         keyPressThread = new Thread() {
             public void run() {
-                while(thStopFlag){
+                while(true){
                     if(BPM >= 90) {
                         isDash = true;
                         robot.keyPress(KeyEvent.VK_W);
@@ -93,7 +90,7 @@ public class Main  implements SerialPortEventListener {
         stopCheckThread = new Thread() {
             @Override
             public void run() {
-                while(thStopFlag){
+                while(true){
                     if((System.currentTimeMillis() - before) >= 1000 && before != 0){
                         BPM = 0;
                         count = 0;
@@ -123,21 +120,6 @@ public class Main  implements SerialPortEventListener {
         keyPressThread.start();
         stopCheckThread.start();
     }
-
-    public void stop(){
-//        thStopFlag = false;
-        keyPressThread.stop();
-        stopCheckThread.stop();
-        serialPort.removeEventListener();
-        serialPort.close();
-        try {
-            input.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Stop");
-    }
-
 
     /**
      * Handle an event on the serial port. Read the data and print it.

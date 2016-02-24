@@ -2,105 +2,143 @@ import gnu.io.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
-import java.util.Enumeration;
 
 public class Main  implements SerialPortEventListener {
+    
     SerialPort serialPort;
-    /**
-     * The port we're normally going to use.
-     */
-    private static final String PORT_NAMES[] = {
-            "/dev/cu.usbmodem1411", // Mac OS X
-            "/dev/cu.usbmodem1421", // Mac OS X
-    };
-    /**
-     * A BufferedReader which will be fed by a InputStreamReader
-     * converting the bytes into characters
-     * making the displayed results codepage independent
-     */
     private BufferedReader input;
-    /**
-     * The output stream to the port
-     */
-    private OutputStream output;
-    /**
-     * Milliseconds to block while waiting for port open
-     */
     private static final int TIME_OUT = 2000;
-    /**
-     * Default bits per second for COM port.
-     */
     private static final int DATA_RATE = 9600;
 
     Robot robot;
+    Thread keyPressThread;
+    Thread stopCheckThread;
 
-    public void initialize() {
+    boolean thStopFlag;
+    public int BPM;
+    public long before;
+    public int nowTime[];
+    public int count;
+    public boolean isFirst;
+    boolean isDash;
+
+    public void variableInit(){
+        thStopFlag = true;
+        BPM = 0;
+        before = 0;
+        nowTime = new int[2];
+        count = 0;
+        isFirst = true;
+        isDash = false;
+    }
+
+    public void initialize(String port) {
+
+        variableInit();
+
+        serialPort = null;
+        thStopFlag = true;
         try {
             robot = new Robot();
         } catch (AWTException ae) {
             ae.printStackTrace();
         }
-        // the next line is for Raspberry Pi and
-        // gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
-        System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/cu.usbmodem1421");
 
         CommPortIdentifier portId = null;
-        Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
-
-        //First, Find an instance of serial port as set in PORT_NAMES.
-        while (portEnum.hasMoreElements()) {
-            CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-            for (String portName : PORT_NAMES) {
-                if (currPortId.getName().equals(portName)) {
-                    portId = currPortId;
-                    break;
-                }
-            }
-        }
-        if (portId == null) {
+        try {
+            portId = CommPortIdentifier.getPortIdentifier(port);
+        } catch (NoSuchPortException e) {
             System.out.println("Could not find COM port.");
             return;
         }
 
         try {
-            // open serial port, and use class name for the appName.
-            serialPort = (SerialPort) portId.open(this.getClass().getName(),
-                    TIME_OUT);
+            serialPort = (SerialPort) portId.open(this.getClass().getName(), TIME_OUT);
+            serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 
-            // set port parameters
-            serialPort.setSerialPortParams(DATA_RATE,
-                    SerialPort.DATABITS_8,
-                    SerialPort.STOPBITS_1,
-                    SerialPort.PARITY_NONE);
-
-            // open the streams
             input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
-            output = serialPort.getOutputStream();
 
-            // add event listeners
             serialPort.addEventListener(this);
             serialPort.notifyOnDataAvailable(true);
         } catch (Exception e) {
             System.err.println(e.toString());
         }
+
+        keyPressThread = new Thread() {
+            public void run() {
+                while(thStopFlag){
+                    if(BPM >= 90) {
+                        isDash = true;
+                        robot.keyPress(KeyEvent.VK_W);
+                        robot.keyPress(KeyEvent.VK_L);
+                        robot.delay(100);
+                        robot.keyRelease(KeyEvent.VK_L);
+
+                    } else if (BPM >= 40) {
+                        if(isDash){
+                            robot.keyRelease(KeyEvent.VK_W);
+                            robot.delay(100);
+                        }
+                        isDash = false;
+                        robot.keyPress(KeyEvent.VK_W);
+                    } else {
+                        isDash = false;
+                        robot.keyRelease(KeyEvent.VK_W);
+                    }
+
+                    robot.delay(100);
+                }
+            }
+        };
+        stopCheckThread = new Thread() {
+            @Override
+            public void run() {
+                while(thStopFlag){
+                    if((System.currentTimeMillis() - before) >= 1000 && before != 0){
+                        BPM = 0;
+                        count = 0;
+                        isFirst=true;
+                        before = 0;
+                        nowTime[0] = 0;
+                        nowTime[1] = 0;
+
+                        robot.keyRelease(KeyEvent.VK_W);
+                        robot.delay(50);
+                        robot.keyPress(KeyEvent.VK_W);
+                        robot.delay(50);
+                        robot.keyRelease(KeyEvent.VK_W);
+
+                        System.out.println("stop");
+                    }
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        };
+        System.out.println("Started");
+        keyPressThread.start();
+        stopCheckThread.start();
     }
 
-    /**
-     * This should be called when you stop using the port.
-     * This will prevent port locking on platforms like Linux.
-     */
-    public synchronized void close() {
-        if (serialPort != null) {
-            serialPort.removeEventListener();
-            serialPort.close();
+    public void stop(){
+//        thStopFlag = false;
+        keyPressThread.stop();
+        stopCheckThread.stop();
+        serialPort.removeEventListener();
+        serialPort.close();
+        try {
+            input.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        System.out.println("Stop");
     }
 
-    private int BPM;
-    private long before = 0;
-    private int nowTime[] = new int[2];
-    private int count = 0;
-    private boolean isFirst = true;
+
     /**
      * Handle an event on the serial port. Read the data and print it.
      */
@@ -108,7 +146,6 @@ public class Main  implements SerialPortEventListener {
         if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
             try {
                 String inputLine = input.readLine();
-//                System.out.println(inputLine);
 
                 if(before == 0){
                     before = System.currentTimeMillis();
@@ -141,68 +178,6 @@ public class Main  implements SerialPortEventListener {
         // Ignore all the other eventTypes, but you should consider the other ones.
     }
 
-    boolean isDash = false;
 
-    public static void main(String[] args) throws Exception {
-        Main main = new Main();
-        main.initialize();
-        Thread t = new Thread() {
-            public void run() {
-                while(true){
-                    if(main.BPM >= 90) {
-                        main.isDash = true;
-                        main.robot.keyPress(KeyEvent.VK_W);
-                        main.robot.keyPress(KeyEvent.VK_L);
-                        main.robot.delay(100);
-                        main.robot.keyRelease(KeyEvent.VK_L);
 
-                    } else if (main.BPM >= 40) {
-                        if(main.isDash){
-                            main.robot.keyRelease(KeyEvent.VK_W);
-                            main.robot.delay(100);
-                        }
-                        main.isDash = false;
-                        main.robot.keyPress(KeyEvent.VK_W);
-                    } else {
-                        main.isDash = false;
-                        main.robot.keyRelease(KeyEvent.VK_W);
-                    }
-
-                    main.robot.delay(100);
-                }
-            }
-        };
-        t.start();
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true){
-                    if((System.currentTimeMillis() - main.before) >= 1000 && main.before != 0){
-                        main.BPM = 0;
-                        main.count = 0;
-                        main.isFirst=true;
-                        main.before = 0;
-                        main.nowTime[0] = 0;
-                        main.nowTime[1] = 0;
-
-                        main.robot.keyRelease(KeyEvent.VK_W);
-                        main.robot.delay(50);
-                        main.robot.keyPress(KeyEvent.VK_W);
-                        main.robot.delay(50);
-                        main.robot.keyRelease(KeyEvent.VK_W);
-
-                        System.out.println("Stop");
-                    }
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        });
-        t2.start();
-        System.out.println("Started");
-    }
 }

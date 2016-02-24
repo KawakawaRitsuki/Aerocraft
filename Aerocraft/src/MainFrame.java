@@ -2,8 +2,7 @@ import gnu.io.CommPortIdentifier;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.List;
 public class MainFrame extends JFrame {
 
     private boolean isStart = false;
+    private Main main = new Main();
 
     public static void main(String[] args) throws Exception {
 
@@ -35,33 +35,14 @@ public class MainFrame extends JFrame {
         List list = new ArrayList();
         Enumeration portList = CommPortIdentifier.getPortIdentifiers();
 
-        CommPortIdentifier portID;
         while (portList.hasMoreElements()) {
-            // リストからポートを取り出す
-            portID = (CommPortIdentifier) portList.nextElement();
+            CommPortIdentifier portID = (CommPortIdentifier) portList.nextElement();
             list.add(portID.getName());
-//            // ポートの名前
-//            System.out.print("Port Name : " + portID.getName() + ",");
-//            // ポートの使用状況
-//            if (portID.isCurrentlyOwned()) {
-//                System.out.print(" Owned,");
-//            } else {
-//                System.out.print(" Not Owned,");
-//            }
-
-//            // ポートのタイプ (シリアル or パラレル)
-//            switch (portID.getPortType()) {
-//                case CommPortIdentifier.PORT_SERIAL:
-//                    System.out.println(" Kind : Serial");
-//                    break;
-//                case CommPortIdentifier.PORT_PARALLEL:
-//                    System.out.println(" Kind : Parallel");
-//                    break;
-//            }
         }
 
         String[] array=(String[])list.toArray(new String[0]);
         JComboBox combo = new JComboBox(array);
+
         combo.setPreferredSize(new Dimension(180, 40));
 
         JLabel label = new JLabel("ポート設定");
@@ -76,9 +57,16 @@ public class MainFrame extends JFrame {
                 if(isStart){
                     isStart = false;
                     button.setText("開始");
+
+                    main.stop();
+
                 }else{
                     isStart = true;
                     button.setText("停止");
+
+                    System.out.println((String)combo.getSelectedItem());
+                    main.initialize((String)combo.getSelectedItem());
+
                 }
             }
         });
